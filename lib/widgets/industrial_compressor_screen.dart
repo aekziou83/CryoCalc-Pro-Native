@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 import '../engine/industrial_compressor_engine.dart';
 import '../l10n/app_strings.dart';
 import '../security/security_guard.dart';
+import '../services/pdf_printer.dart';
 
 class IndustrialCompressorScreen extends StatefulWidget {
   final AppLang lang;
@@ -35,15 +33,17 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
   String _brandFilter = 'ALL';
   String _techFilter = 'ALL';
   String? _selectedCompId;
+  bool _showCustomPanel = false;
 
-  final _valCtrl = TextEditingController(text: '25');
-  final _t0Ctrl = TextEditingController(text: '-10');
-  final _tkCtrl = TextEditingController(text: '45');
-  final _shCtrl = TextEditingController(text: '7');
-  final _scCtrl = TextEditingController(text: '5');
-  final _pipeCtrl = TextEditingController(text: '15');
-  final _voltCtrl = TextEditingController(text: '400');
-  final _customRefCtrl = TextEditingController(text: 'R452A');
+  // All input controllers start EMPTY on entry as requested
+  final _valCtrl = TextEditingController();
+  final _t0Ctrl = TextEditingController();
+  final _tkCtrl = TextEditingController();
+  final _shCtrl = TextEditingController();
+  final _scCtrl = TextEditingController();
+  final _pipeCtrl = TextEditingController();
+  final _voltCtrl = TextEditingController();
+  final _customRefCtrl = TextEditingController();
   final _customNoteCtrl = TextEditingController();
 
   IndustrialCalcResult? _res;
@@ -59,20 +59,6 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
   }
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.initialQ0Kw != null && widget.initialQ0Kw! > 0) {
-      _valCtrl.text = widget.initialQ0Kw!.toStringAsFixed(1);
-    }
-    if (widget.initialT0 != null) _t0Ctrl.text = widget.initialT0!.toStringAsFixed(1);
-    if (widget.initialTk != null) _tkCtrl.text = widget.initialTk!.toStringAsFixed(1);
-    if (widget.initialRef != null && IndustrialCompressorEngine.refrigerants.any((r) => r.id == widget.initialRef)) {
-      _refrigerant = widget.initialRef!;
-    }
-    _calculate();
-  }
-
-  @override
   void dispose() {
     for (final c in [_valCtrl, _t0Ctrl, _tkCtrl, _shCtrl, _scCtrl, _pipeCtrl, _voltCtrl, _customRefCtrl, _customNoteCtrl]) {
       c.dispose();
@@ -85,12 +71,44 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s), backgroundColor: th.card));
   }
 
+  void _applyAutoMode() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _showCustomPanel = false;
+      _inputMode = 'kw';
+      _valCtrl.text = (widget.initialQ0Kw != null && widget.initialQ0Kw! > 0)
+          ? widget.initialQ0Kw!.toStringAsFixed(1)
+          : '25';
+      _t0Ctrl.text = widget.initialT0 != null ? widget.initialT0!.toStringAsFixed(1) : '-10';
+      _tkCtrl.text = widget.initialTk != null ? widget.initialTk!.toStringAsFixed(1) : '45';
+      _shCtrl.text = '7';
+      _scCtrl.text = '5';
+      _pipeCtrl.text = '15';
+      _voltCtrl.text = '400';
+      if (widget.initialRef != null && IndustrialCompressorEngine.refrigerants.any((r) => r.id == widget.initialRef)) {
+        _refrigerant = widget.initialRef!;
+      } else {
+        _refrigerant = 'R404A';
+      }
+      _brandFilter = 'ALL';
+      _techFilter = 'ALL';
+      _selectedCompId = null;
+    });
+    _calculate();
+    _msg(_l('تمت التعبئة التلقائية والحساب', 'Mode automatique applique', 'Auto values applied'));
+  }
+
+  void _toggleCustomMode() {
+    HapticFeedback.selectionClick();
+    setState(() => _showCustomPanel = !_showCustomPanel);
+  }
+
   void _calculate() {
     final val = double.tryParse(_valCtrl.text.trim());
     final t0 = double.tryParse(_t0Ctrl.text.trim());
     final tk = double.tryParse(_tkCtrl.text.trim());
     if (val == null || val <= 0 || t0 == null || tk == null) {
-      _msg(_l('أدخل القيمة ودرجتي التبخير والتكثيف بشكل صحيح.', 'Veuillez saisir des valeurs valides.', 'Please enter valid numbers.'));
+      _msg(_l('أدخل القيمة ودرجتي التبخير T₀ والتكثيف Tk أولاً (أو اضغط «تلقائي»).', 'Saisissez la valeur, T₀ et Tk (ou Automatique).', 'Enter value, T₀ and Tk first (or tap Auto).'));
       return;
     }
     HapticFeedback.mediumImpact();
@@ -122,124 +140,47 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
       _brandFilter = 'ALL';
       _techFilter = 'ALL';
       _selectedCompId = null;
-      _valCtrl.text = '25';
-      _t0Ctrl.text = '-10';
-      _tkCtrl.text = '45';
-      _shCtrl.text = '7';
-      _scCtrl.text = '5';
-      _pipeCtrl.text = '15';
-      _voltCtrl.text = '400';
-      _customNoteCtrl.clear();
+      _showCustomPanel = false;
+      for (final c in [_valCtrl, _t0Ctrl, _tkCtrl, _shCtrl, _scCtrl, _pipeCtrl, _voltCtrl, _customRefCtrl, _customNoteCtrl]) {
+        c.clear();
+      }
+      _res = null;
     });
-    _calculate();
-    _msg(_l('تمت إعادة التعيين', 'Réinitialisé', 'Reset complete'));
+    _msg(_l('تمت إعادة تعيين جميع الحقول', 'Champs reinitialises', 'All fields cleared'));
   }
 
   Future<void> _copySummary() async {
     if (_res == null) return;
     final r = _res!;
     final sb = StringBuffer()
-      ..writeln('=== CryoCalc PRO ${CryoOwner.appVersion} — Industrial Compressor & Group ===')
+      ..writeln('=== CryoCalc PRO ${CryoOwner.appVersion} ===')
       ..writeln('${_l("الضاغط المختار", "Compresseur", "Selected")}: ${r.selected.item.brand} ${r.selected.item.model} (${r.selected.item.hp} HP)')
-      ..writeln('Q0=${r.q0Kw} kW (${r.kcalH} kcal/h) | Vb req=${r.reqVbM3h} m3/h | tau=${r.tau} | T_dis=${r.tDisC} C');
+      ..writeln('Q0=${r.q0Kw} kW (${r.kcalH} kcal/h) | Vb=${r.reqVbM3h} m3/h | tau=${r.tau} | T_dis=${r.tDisC} C');
     if (_customNoteCtrl.text.trim().isNotEmpty) {
-      sb.writeln('Note: ${_customNoteCtrl.text.trim()}');
+      sb.writeln('${_l("تحديد مخصص", "Personnalise", "Custom")}: ${_customNoteCtrl.text.trim()}');
     }
-    sb.writeln('\n--- 16 Industrial Group Components ---');
     for (final p in r.groupParts) {
       sb.writeln('${p.index}. ${p.title}: ${p.spec} (${p.details})');
     }
     await Clipboard.setData(ClipboardData(text: sb.toString()));
-    _msg(_l('تم نسخ دراسة الضاغط وقطع المجموعة', 'Étude copiée', 'Study copied'));
+    _msg(_l('تم النسخ بنجاح', 'Copie avec succes', 'Copied successfully'));
   }
 
   Future<void> _printPdf() async {
     if (_res == null) return;
-    final r = _res!;
-    pw.ThemeData? pdfTheme;
+    final refName = _refrigerant == 'custom' && _customRefCtrl.text.trim().isNotEmpty
+        ? _customRefCtrl.text.trim()
+        : _refrigerant;
     try {
-      final reg = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
-      final bold = await rootBundle.load('assets/fonts/Cairo-Bold.ttf');
-      pdfTheme = pw.ThemeData.withFont(base: pw.Font.ttf(reg), bold: pw.Font.ttf(bold));
-    } catch (_) {}
-
-    final isAr = widget.lang == AppLang.ar && pdfTheme != null;
-    final doc = pw.Document(theme: pdfTheme);
-
-    doc.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(22),
-        textDirection: isAr ? pw.TextDirection.rtl : pw.TextDirection.ltr,
-        build: (_) => [
-          pw.Container(
-            padding: const pw.EdgeInsets.all(12),
-            decoration: const pw.BoxDecoration(
-              color: PdfColor.fromInt(0xFF070D19),
-              borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
-            ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  isAr ? 'دراسة الضاغط الصناعي وقطع المجموعة — CryoCalc PRO' : 'CryoCalc PRO — Industrial Compressor & Group Sizing',
-                  style: pw.TextStyle(color: const PdfColor.fromInt(0xFF38BDF8), fontSize: 14, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 3),
-                pw.Text(
-                  '${isAr ? CryoOwner.developerAr : CryoOwner.developerEn} | ${CryoOwner.groupCode} | ${r.selected.item.brand} ${r.selected.item.model} (${r.selected.item.hp} HP)',
-                  style: const pw.TextStyle(color: PdfColors.white, fontSize: 9.5),
-                ),
-                if (_customNoteCtrl.text.trim().isNotEmpty)
-                  pw.Text(_customNoteCtrl.text.trim(), style: const pw.TextStyle(color: PdfColors.grey300, fontSize: 8.5)),
-              ],
-            ),
-          ),
-          pw.SizedBox(height: 10),
-          pw.Table(
-            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.6),
-            children: [
-              _pdfRow('Q0 / kcal/h / HP', '${r.q0Kw} kW  |  ${r.kcalH} kcal/h  |  ~${r.estHp} HP'),
-              _pdfRow('P0 / Pk / tau', '${r.p0Abs} bar (${r.p0Rel} rel)  |  ${r.pkAbs} bar (${r.pkRel} rel)  |  tau = ${r.tau}'),
-              _pdfRow('Mass Flow / Vb req / eta_v', '${r.massFlowKgH} kg/h  |  Vb = ${r.reqVbM3h} m3/h  |  eta_v = ${(r.etaV * 100).toInt()}%'),
-              _pdfRow('P_elec / COP / Qk / T_dis', '${r.pElecEstKw} kW  |  COP ${r.cop}  |  Qk ${r.qCondKw} kW  |  T_dis ${r.tDisC} C'),
-            ],
-          ),
-          pw.SizedBox(height: 10),
-          pw.Text(
-            isAr ? 'قائمة القطع الخاصة بالمجموعة الصناعية (16 قطعة)' : 'Industrial Condensing Group Parts List (16 Components)',
-            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
-          ),
-          pw.SizedBox(height: 6),
-          pw.Table(
-            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(1.2),
-              1: const pw.FlexColumnWidth(1.8),
-            },
-            children: r.groupParts
-                .map((p) => _pdfRow('${p.index}. ${p.title}', '${p.spec}\n${p.details}'))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-
-    await Printing.layoutPdf(onLayout: (_) async => doc.save(), name: 'CryoCalcPro_Industrial_Group.pdf');
-  }
-
-  pw.TableRow _pdfRow(String k, String v) {
-    return pw.TableRow(children: [
-      pw.Container(
-        color: PdfColors.grey100,
-        padding: const pw.EdgeInsets.all(5),
-        child: pw.Text(k, style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold)),
-      ),
-      pw.Container(
-        padding: const pw.EdgeInsets.all(5),
-        child: pw.Text(v, style: const pw.TextStyle(fontSize: 8.5)),
-      ),
-    ]);
+      await PdfPrinterService.printIndustrialReport(
+        lang: widget.lang,
+        result: _res!,
+        refrigerant: refName,
+        customNote: _customNoteCtrl.text.trim(),
+      );
+    } catch (e) {
+      _msg('PDF: $e');
+    }
   }
 
   @override
@@ -255,36 +196,33 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain),
         ),
         actions: [
-          IconButton(onPressed: _copySummary, icon: Icon(Icons.copy_all_rounded, color: th.primary)),
-          IconButton(onPressed: _printPdf, icon: Icon(Icons.print_rounded, color: th.secondary)),
+          IconButton(onPressed: r == null ? null : _copySummary, icon: Icon(Icons.copy_all_rounded, color: r == null ? _textMuted : th.primary)),
+          IconButton(onPressed: r == null ? null : _printPdf, icon: Icon(Icons.print_rounded, color: r == null ? _textMuted : th.secondary)),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: [
-          // 1. INPUT PARAMETERS CARD
           _card(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _l('معطيات حساب الضاغط الصناعي (3–150 HP)', 'Paramètres Compresseur (3–150 HP)', 'Industrial Compressor Inputs (3–150 HP)'),
-                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: _textMain),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: _reset,
-                      icon: Icon(Icons.restart_alt_rounded, size: 17, color: th.accent),
-                      label: Text(_l('إعادة تعيين', 'Réinit.', 'Reset'), style: TextStyle(color: th.accent, fontWeight: FontWeight.w800, fontSize: 12)),
-                    ),
-                  ],
+                Text(
+                  _l('معطيات حساب الضاغط الصناعي (3–150 HP)', 'Paramètres Compresseur (3–150 HP)', 'Industrial Compressor Inputs (3–150 HP)'),
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: _textMain),
                 ),
                 const SizedBox(height: 8),
-                // Input Mode Selector: Q0 (kW) | Power (HP) | Swept Volume (m3/h)
+                // Unified 3-Button Bar: Auto | Custom | Reset
+                Row(
+                  children: [
+                    _ctrlBtn(Icons.auto_awesome_rounded, _l('تلقائي', 'Auto', 'Auto'), th.secondary, _applyAutoMode),
+                    const SizedBox(width: 6),
+                    _ctrlBtn(Icons.tune_rounded, _l('تحديد مخصص', 'Personnalisé', 'Custom'), _showCustomPanel ? th.primary : _textMuted, _toggleCustomMode, active: _showCustomPanel),
+                    const SizedBox(width: 6),
+                    _ctrlBtn(Icons.restart_alt_rounded, _l('إعادة تعيين', 'Réinit.', 'Reset'), th.accent, _reset),
+                  ],
+                ),
+                const SizedBox(height: 10),
                 Row(
                   children: [
                     _modePill('kw', _l('حسب kW', 'Par kW', 'By kW')),
@@ -321,11 +259,11 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                         isExpanded: true,
                         decoration: InputDecoration(labelText: _l('وسيط التبريد', 'Fluide', 'Refrigerant')),
                         items: IndustrialCompressorEngine.refrigerants
-                            .map((rf) => DropdownMenuItem(value: rf.id, child: Text(rf.name, overflow: TextOverflow.ellipsis)))
+                            .map((rf) => DropdownMenuItem(value: rf.id, child: Text(rf.id == 'custom' ? _l('تحديد مخصص', 'Personnalisé', 'Custom') : rf.name, overflow: TextOverflow.ellipsis)))
                             .toList(),
                         onChanged: (v) {
                           setState(() => _refrigerant = v ?? 'R404A');
-                          _calculate();
+                          if (_res != null) _calculate();
                         },
                       ),
                     ),
@@ -346,7 +284,7 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                             _techFilter = v ?? 'ALL';
                             _selectedCompId = null;
                           });
-                          _calculate();
+                          if (_res != null) _calculate();
                         },
                       ),
                     ),
@@ -354,7 +292,7 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                 ),
                 if (_refrigerant == 'custom') ...[
                   const SizedBox(height: 8),
-                  TextField(controller: _customRefCtrl, decoration: InputDecoration(labelText: _l('وسيط مخصص', 'Fluide personnalisé', 'Custom Refrigerant'))),
+                  TextField(controller: _customRefCtrl, decoration: InputDecoration(labelText: _l('وسيط مخصص', 'Fluide personnalisé', 'Custom Refrigerant'), hintText: 'R452A')),
                 ],
                 const SizedBox(height: 9),
                 Row(
@@ -375,7 +313,7 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                             _brandFilter = v ?? 'ALL';
                             _selectedCompId = null;
                           });
-                          _calculate();
+                          if (_res != null) _calculate();
                         },
                       ),
                     ),
@@ -385,22 +323,24 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                     Expanded(child: _numField(_voltCtrl, 'Volt (V)', '400')),
                   ],
                 ),
-                const SizedBox(height: 9),
-                Row(
-                  children: [
-                    Expanded(child: _numField(_shCtrl, 'SH (K)', '7')),
-                    const SizedBox(width: 8),
-                    Expanded(child: _numField(_scCtrl, 'SC (K)', '5')),
-                  ],
-                ),
-                const SizedBox(height: 9),
-                TextField(
-                  controller: _customNoteCtrl,
-                  decoration: InputDecoration(
-                    labelText: _l('تحديد مخصص للمجموعة الصناعية', 'Spécification personnalisée', 'Custom Industrial Specification'),
-                    hintText: _l('مثال: نفق تجميد 10 طن أو غرفة تبريد مركزي', 'Ex: Tunnel 10T / Centrale', 'Ex: 10T Blast Tunnel / Rack'),
+                if (_showCustomPanel) ...[
+                  const SizedBox(height: 9),
+                  Row(
+                    children: [
+                      Expanded(child: _numField(_shCtrl, 'SH (K)', '7')),
+                      const SizedBox(width: 8),
+                      Expanded(child: _numField(_scCtrl, 'SC (K)', '5')),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 9),
+                  TextField(
+                    controller: _customNoteCtrl,
+                    decoration: InputDecoration(
+                      labelText: _l('تحديد مخصص للمجموعة الصناعية', 'Spécification personnalisée', 'Custom Industrial Specification'),
+                      hintText: _l('مثال: نفق تجميد 10 طن أو غرفة تبريد مركزي', 'Ex: Tunnel 10T / Centrale', 'Ex: 10T Blast Tunnel / Rack'),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -423,9 +363,30 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
             ),
           ),
 
-          if (r != null) ...[
+          if (r == null) ...[
+            const SizedBox(height: 14),
+            _card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  children: [
+                    Icon(Icons.factory_outlined, size: 40, color: th.primary),
+                    const SizedBox(height: 10),
+                    Text(
+                      _l(
+                        'أدخل القيم المطلوبة واضغط «احسب» أو اضغط زر «تلقائي» في الأعلى لإظهار الضواغط الصناعية والقطع الـ 16.',
+                        'Saisissez les valeurs puis cliquez sur « Calculer » ou « Auto » ci-dessus.',
+                        'Enter values and tap "Calculate" or tap "Auto" above to show industrial compressors & 16 parts.',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12.5, color: _textMuted, height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
             const SizedBox(height: 12),
-            // 2. THERMODYNAMIC KPI ROW
             Row(
               children: [
                 Expanded(child: _kpi('Q₀ / HP', '${r.q0Kw} kW', '~${r.estHp} HP', th.secondary)),
@@ -438,8 +399,6 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
             const SizedBox(height: 10),
             _infoTile(_l('الضغوط (P₀ / Pk)', 'Pressions (P₀ / Pk)', 'Pressures (P₀ / Pk)'), '${r.p0Rel} bar  /  ${r.pkRel} bar (rel)'),
             _infoTile(_l('التدفق الكتلي / القدرة / COP', 'Débit / P_elec / COP', 'Mass Flow / Power / COP'), '${r.massFlowKgH} kg/h • ${r.pElecEstKw} kW • COP ${r.cop}'),
-
-            // Warnings
             if (r.warnings.isNotEmpty) ...[
               const SizedBox(height: 6),
               ...r.warnings.map((w) => Container(
@@ -453,8 +412,6 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                     child: Text('⚠ $w', style: TextStyle(fontSize: 12, color: _textMain, height: 1.4)),
                   )),
             ],
-
-            // 3. MATCHED INDUSTRIAL COMPRESSORS (ALL POWERS)
             _banner(_l('الضواغط الصناعية المناسبة (اضغط لاختيار واحد وتحديث القطع)', 'Compresseurs Industriels Adaptés (Touchez pour choisir)', 'Matched Industrial Compressors (Tap to select)')),
             ...r.matches.map((sc) {
               final sel = sc.item.id == r.selected.item.id;
@@ -476,12 +433,7 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                     children: [
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              '${sc.item.brand} ${sc.item.model}',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain),
-                            ),
-                          ),
+                          Expanded(child: Text('${sc.item.brand} ${sc.item.model}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain))),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(color: th.primary.withAlpha(32), borderRadius: BorderRadius.circular(99)),
@@ -505,8 +457,6 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                 ),
               );
             }),
-
-            // 4. COMPLETE 16 INDUSTRIAL GROUP PARTS LIST
             _banner(_l('القطع الـ 16 الخاصة بالمجموعة الصناعية (${r.selected.item.brand} ${r.selected.item.model})', '16 Pièces du Groupe Industriel (${r.selected.item.model})', '16 Industrial Condensing Group Parts (${r.selected.item.model})')),
             ...r.groupParts.map((part) => Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -542,7 +492,6 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
                     ],
                   ),
                 )),
-
             const SizedBox(height: 10),
             Row(
               children: [
@@ -571,13 +520,40 @@ class _IndustrialCompressorScreenState extends State<IndustrialCompressorScreen>
     );
   }
 
+  Widget _ctrlBtn(IconData icon, String label, Color col, VoidCallback onTap, {bool active = false}) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+          decoration: BoxDecoration(
+            color: active ? col.withAlpha(35) : th.inputBg,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: col.withAlpha(active ? 220 : 120)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: col),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(label, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.8, fontWeight: FontWeight.w800, color: col)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _modePill(String id, String label) {
     final active = _inputMode == id;
     return Expanded(
       child: InkWell(
         onTap: () {
           setState(() => _inputMode = id);
-          _calculate();
+          if (_res != null) _calculate();
         },
         borderRadius: BorderRadius.circular(10),
         child: Container(
