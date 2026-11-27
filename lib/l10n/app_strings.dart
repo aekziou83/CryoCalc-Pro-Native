@@ -153,7 +153,6 @@ class AppStrings {
   }
 
   static const Map<String, Map<AppLang, String>> _dict = {
-    // App Bar & Navigation
     'dev_name': {AppLang.ar: 'م. أحمد زينور', AppLang.fr: 'Ing. Ahmed Zinnour', AppLang.en: 'Eng. Ahmed Zinnour'},
     'splash_sub': {AppLang.ar: '100% بدون إنترنت • محصّن • 0% إعلانات', AppLang.fr: '100% Hors-ligne • Sécurisé • 0% Pub', AppLang.en: '100% Offline • Secured • 0% Ads'},
     'tab_3d': {AppLang.ar: '3D', AppLang.fr: '3D', AppLang.en: '3D'},
@@ -164,14 +163,17 @@ class AppStrings {
     'tab_report': {AppLang.ar: 'التقرير', AppLang.fr: 'Rapport', AppLang.en: 'Report'},
     'expert': {AppLang.ar: 'خبير', AppLang.fr: 'Expert', AppLang.en: 'Expert'},
     'basic': {AppLang.ar: 'مبتدئ', AppLang.fr: 'Simple', AppLang.en: 'Basic'},
-    'custom': {AppLang.ar: 'مخصص', AppLang.fr: 'Personnalisé', AppLang.en: 'Custom'},
+    'custom': {AppLang.ar: 'تحديد مخصص', AppLang.fr: 'Personnalisé', AppLang.en: 'Custom'},
+    'mode_auto': {AppLang.ar: 'تلقائي', AppLang.fr: 'Automatique', AppLang.en: 'Auto'},
+    'mode_custom': {AppLang.ar: 'تحديد مخصص', AppLang.fr: 'Personnalisé', AppLang.en: 'Custom'},
+    'auto_filled': {AppLang.ar: 'تم تفعيل الوضع التلقائي وتعبئة القيم القياسية', AppLang.fr: 'Mode automatique activé', AppLang.en: 'Auto mode applied'},
     'themes_title': {AppLang.ar: 'اختيار ألوان وثيم التطبيق', AppLang.fr: 'Thèmes et couleurs Pro', AppLang.en: 'Professional Color Themes'},
     'lang_title': {AppLang.ar: 'لغة التطبيق', AppLang.fr: 'Langue de l\'application', AppLang.en: 'Application Language'},
     'copied': {AppLang.ar: 'تم النسخ بنجاح', AppLang.fr: 'Copié avec succès', AppLang.en: 'Copied successfully'},
     'fb_dev': {AppLang.ar: 'نسخ رابط صفحة المطور على فيسبوك', AppLang.fr: 'Copier la page Facebook du développeur', AppLang.en: 'Copy Developer Facebook Page'},
     'fb_group': {AppLang.ar: 'نسخ رابط مجموعة التبريد M.D.F.CH.É.É', AppLang.fr: 'Copier le groupe froid M.D.F.CH.É.É', AppLang.en: 'Copy M.D.F.CH.É.É HVAC Group'},
 
-    // Tab 1: Cold Room Inputs
+    // Tab 1
     'room_params': {AppLang.ar: 'معطيات غرفة التبريد والعزل', AppLang.fr: 'Paramètres Chambre Froide & Isolation', AppLang.en: 'Cold Room & Insulation Inputs'},
     'reset': {AppLang.ar: 'إعادة تعيين', AppLang.fr: 'Réinitialiser', AppLang.en: 'Reset'},
     'room_type': {AppLang.ar: 'نوع غرفة التبريد', AppLang.fr: 'Type de chambre froide', AppLang.en: 'Cold Room Type'},
@@ -233,7 +235,7 @@ class AppStrings {
     'n_comp': {AppLang.ar: '1. الضاغط', AppLang.fr: '1. Compresseur', AppLang.en: '1. Compressor'},
     'n_cond': {AppLang.ar: '2. المكثف', AppLang.fr: '2. Condenseur', AppLang.en: '2. Condenser'},
     'n_rec': {AppLang.ar: '3. خزان السائل', AppLang.fr: '3. Réservoir', AppLang.en: '3. Receiver'},
-    'n_fd': {AppLang.ar: '4. مجفف + زجاجة', AppLang.fr: '4. Déshy + Voyant', AppLang.en: '4. Drier + Glass'},
+    'n_fd': {AppLang.ar: '4. مجفف + مؤشر', AppLang.fr: '4. Déshy + Voyant', AppLang.en: '4. Drier + Glass'},
     'n_txv': {AppLang.ar: '5. صمام التمدد', AppLang.fr: '5. Détendeur TXV', AppLang.en: '5. TXV Valve'},
     'n_evap': {AppLang.ar: '6. المبخر', AppLang.fr: '6. Évaporateur', AppLang.en: '6. Evaporator'},
 
@@ -266,17 +268,17 @@ class AppStrings {
     'xref_title': {AppLang.ar: 'المعادل الميداني للضواغط (Cross-Reference)', AppLang.fr: 'Équivalence compresseurs (Cross-Ref)', AppLang.en: 'Compressor Cross-Reference'},
     'tap_unit': {AppLang.ar: 'اضغط على أي مجموعة لتثبيتها في الحسابات والـ 3D:', AppLang.fr: 'Touchez un groupe pour l\'appliquer au plan 3D :', AppLang.en: 'Tap a unit to lock it into calculations & 3D:'},
 
-    // Tab 4: Scientific Component Sizing
+    // Tab 4: Scientific Component Sizing (UPDATED: الأكيومليتور)
     'sci_title': {AppLang.ar: 'الحساب العلمي الدقيق لمكونات الدائرة', AppLang.fr: 'Dimensionnement Scientifique du Circuit', AppLang.en: 'Scientific Refrigeration Component Sizing'},
     'sec_0': {AppLang.ar: '0. الدورة الثرموديناميكية', AppLang.fr: '0. Cycle Thermodynamique', AppLang.en: '0. Thermodynamic Cycle'},
     'sec_1': {AppLang.ar: '1. حساب الضاغط (Vb = ṁ·v\'\'/ηv)', AppLang.fr: '1. Compresseur (Vb = ṁ·v\'\'/ηv)', AppLang.en: '1. Compressor (Vb = ṁ·v\'\'/ηv)'},
     'sec_2': {AppLang.ar: '2. حساب المبخر (A = Q₀ / K·ΔT₁)', AppLang.fr: '2. Évaporateur (A = Q₀ / K·ΔT₁)', AppLang.en: '2. Evaporator (A = Q₀ / K·ΔT₁)'},
     'sec_3': {AppLang.ar: '3. حساب المكثف (Qk = Q₀ + P_elec)', AppLang.fr: '3. Condenseur (Qk = Q₀ + P_elec)', AppLang.en: '3. Condenser (Qk = Q₀ + P_elec)'},
     'sec_4': {AppLang.ar: '4. المنظم الحراري + رقم الأورفيس (TXV)', AppLang.fr: '4. Détendeur + Buse / Orifice (TXV)', AppLang.en: '4. Expansion Valve & Orifice (TXV)'},
-    'sec_5': {AppLang.ar: '5. الفلتر المجفف وزجاجة البيان', AppLang.fr: '5. Déshydrateur & Voyant Liquide', AppLang.en: '5. Filter Drier & Sight Glass'},
+    'sec_5': {AppLang.ar: '5. الفلتر المجفف ومؤشر السائل', AppLang.fr: '5. Déshydrateur & Voyant Liquide', AppLang.en: '5. Filter Drier & Sight Glass'},
     'sec_6': {AppLang.ar: '6. فاصل الزيت (Séparateur d\'huile)', AppLang.fr: '6. Séparateur d\'huile', AppLang.en: '6. Oil Separator'},
     'sec_7': {AppLang.ar: '7. خزان سائل التبريد (قاعدة 80% EN 378)', AppLang.fr: '7. Réservoir Liquide (Règle 80% EN 378)', AppLang.en: '7. Liquid Receiver (EN 378 80% Rule)'},
-    'sec_8': {AppLang.ar: '8. الزجاجة المضادة للطلق (Bouteille ACL)', AppLang.fr: '8. Bouteille Anti-Coup de Liquide (ACL)', AppLang.en: '8. Suction Line Accumulator (ACL)'},
+    'sec_8': {AppLang.ar: '8. الأكيومليتور (Bouteille ACL)', AppLang.fr: '8. Bouteille Anti-Coup de Liquide (ACL)', AppLang.en: '8. Suction Line Accumulator (ACL)'},
     'sec_9': {AppLang.ar: '9. الصمام الكهرومغناطيسي والخزانة الكهربائية', AppLang.fr: '9. Électrovanne & Armoire Électrique', AppLang.en: '9. Solenoid Valve & Electrical Panel'},
     's_p0': {AppLang.ar: 'ضغط التبخير P₀ (مطلق / نسبي)', AppLang.fr: 'Pression évap. P₀ (abs / rel)', AppLang.en: 'Evap. Pressure P₀ (abs / rel)'},
     's_pk': {AppLang.ar: 'ضغط التكثيف Pk (مطلق / نسبي)', AppLang.fr: 'Pression cond. Pk (abs / rel)', AppLang.en: 'Cond. Pressure Pk (abs / rel)'},
@@ -300,15 +302,15 @@ class AppStrings {
     's_orifice': {AppLang.ar: 'رقم الأورفيس (البوز)', AppLang.fr: 'Numéro de buse / Orifice', AppLang.en: 'Orifice Number'},
     's_mop': {AppLang.ar: 'توصية الـ MOP', AppLang.fr: 'Recommandation MOP', AppLang.en: 'MOP Recommendation'},
     's_drier': {AppLang.ar: 'الفلتر المجفف', AppLang.fr: 'Filtre déshydrateur', AppLang.en: 'Filter Drier'},
-    's_sg': {AppLang.ar: 'زجاجة البيان', AppLang.fr: 'Voyant liquide & humidité', AppLang.en: 'Sight Glass'},
+    's_sg': {AppLang.ar: 'مؤشر سائل التبريد', AppLang.fr: 'Voyant liquide & humidité', AppLang.en: 'Sight Glass'},
     's_oilmod': {AppLang.ar: 'موديل فاصل الزيت وقطر الطرد', AppLang.fr: 'Séparateur d\'huile & Ø refoul.', AppLang.en: 'Oil Separator & Discharge Pipe'},
     's_oilvel': {AppLang.ar: 'سرعة الغاز وشحنة الزيت الأولية', AppLang.fr: 'Vitesse gaz & précharge huile', AppLang.en: 'Discharge Velocity & Oil Charge'},
     's_oilreq': {AppLang.ar: 'حالة التركيب', AppLang.fr: 'Exigence d\'installation', AppLang.en: 'Requirement Status'},
     's_chg': {AppLang.ar: 'الشحنة التقديرية وكثافة السائل', AppLang.fr: 'Charge estimée & densité liq.', AppLang.en: 'Est. Charge & Liquid Density'},
     's_recmin': {AppLang.ar: 'الحجم الأدنى المحسوب (80% × 1.2)', AppLang.fr: 'Volume minimal calculé (80%)', AppLang.en: 'Min Calculated Volume (80%)'},
     's_recstd': {AppLang.ar: 'خزان السائل القياسي', AppLang.fr: 'Réservoir liquide standard', AppLang.en: 'Standard Liquid Receiver'},
-    's_aclmin': {AppLang.ar: 'الحجم الأدنى للـ ACL (≥ 55%)', AppLang.fr: 'Volume min. ACL (≥ 55%)', AppLang.en: 'Min ACL Volume (≥ 55%)'},
-    's_aclstd': {AppLang.ar: 'موديل الزجاجة المضادة للطلق', AppLang.fr: 'Modèle bouteille ACL', AppLang.en: 'Suction Accumulator Model'},
+    's_aclmin': {AppLang.ar: 'الحجم الأدنى للأكيومليتور (≥ 55%)', AppLang.fr: 'Volume min. ACL (≥ 55%)', AppLang.en: 'Min ACL Volume (≥ 55%)'},
+    's_aclstd': {AppLang.ar: 'موديل الأكيومليتور (ACL)', AppLang.fr: 'Modèle bouteille ACL', AppLang.en: 'Suction Accumulator Model'},
     's_aclbleed': {AppLang.ar: 'قطر السحب وثقب رجوع الزيت', AppLang.fr: 'Ø Aspiration & orifice huile', AppLang.en: 'Suction Port & Oil Bleed Hole'},
     's_sol': {AppLang.ar: 'الصمام الكهرومغناطيسي والحماية', AppLang.fr: 'Électrovanne & pressostat HP/LP', AppLang.en: 'Solenoid & HP/LP Switch'},
     's_elec': {AppLang.ar: 'القاطع / الكونتاكتور / الكابل', AppLang.fr: 'Disjoncteur / Contacteur / Câble', AppLang.en: 'Breaker / Contactor / Cable'},
@@ -338,9 +340,9 @@ class AppStrings {
     'print_report': {AppLang.ar: 'طباعة / PDF التقرير', AppLang.fr: 'Imprimer / PDF', AppLang.en: 'Print / PDF'},
     'copy_report': {AppLang.ar: 'نسخ التقرير', AppLang.fr: 'Copier', AppLang.en: 'Copy'},
     'need_calc': {
-      AppLang.ar: 'أدخل أبعاد الغرفة واضغط «احسب» في تبويب 3D أولاً لإظهار النتائج العلمية الكاملة.',
-      AppLang.fr: 'Saisissez les dimensions et cliquez sur « Calculer » dans l\'onglet 3D d\'abord.',
-      AppLang.en: 'Enter room dimensions and tap "Calculate" in the 3D tab first to view results.',
+      AppLang.ar: 'أدخل أبعاد الغرفة واضغط «احسب» في تبويب 3D أولاً (أو اضغط «تلقائي») لإظهار النتائج العلمية الكاملة.',
+      AppLang.fr: 'Saisissez les dimensions et cliquez sur « Calculer » dans 3D (ou « Automatique ») pour afficher les résultats.',
+      AppLang.en: 'Enter room dimensions and tap "Calculate" in 3D (or tap "Auto") to view full results.',
     },
     'err_inputs': {
       AppLang.ar: 'يرجى إدخال الأبعاد (L, W, H) ودرجتي الحرارة الداخلية والخارجية أولاً.',
