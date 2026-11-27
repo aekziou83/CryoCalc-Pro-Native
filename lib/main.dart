@@ -6,6 +6,7 @@ import 'security/security_guard.dart';
 import 'engine/cryo_engine.dart';
 import 'services/pdf_printer.dart';
 import 'widgets/room_3d_viewer.dart';
+import 'widgets/industrial_compressor_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -886,7 +887,6 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
         elevation: 0,
         title: Row(
           children: [
-            // App Icon directly inside AppBar
             Container(
               width: 34,
               height: 34,
@@ -1174,7 +1174,6 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
                 ],
               ],
               const SizedBox(height: 10),
-              // Dedicated Custom Specification Line inside Calculation Settings
               TextField(
                 controller: _customCalcLineCtrl,
                 decoration: InputDecoration(
@@ -1320,7 +1319,7 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
     );
   }
 
-  /* ==================== TAB 3: UNITS & CUSTOM CROSS-REFERENCE ==================== */
+  /* ==================== TAB 3: UNITS, INDUSTRIAL CALC & CUSTOM CROSS-REFERENCE ==================== */
   Widget _buildUnitsTab() {
     List<CompressorItem> xrefList;
     if (_xrefSourceId == 'custom') {
@@ -1336,6 +1335,43 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
+        // Quick Launch Button for Industrial Compressor & 16 Group Parts Calculator
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: th.accent,
+              foregroundColor: const Color(0xFF04101F),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => IndustrialCompressorScreen(
+                    lang: widget.lang,
+                    themePreset: th,
+                    initialQ0Kw: _result?.q0Kw,
+                    initialT0: _result?.t0,
+                    initialTk: _result?.tk,
+                    initialRef: _refrigerant,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.factory_rounded),
+            label: Text(
+              _l(
+                'حاسبة الضواغط الصناعية (3–150 HP) + 16 قطعة للمجموعة',
+                'Calculateur Industriel (3–150 HP) + 16 Pièces',
+                'Industrial Compressor Calc (3–150 HP) + 16 Parts',
+              ),
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
         _card(
           child: Column(
             children: [
@@ -1547,7 +1583,6 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
-        // Direct Custom Sizing Card (always accessible so tab is never empty!)
         _card(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
