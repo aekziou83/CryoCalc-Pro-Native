@@ -46,7 +46,7 @@ class _CryoCalcAppState extends State<CryoCalcApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CryoCalc Pro v5.2',
+      title: 'CryoCalc Pro v5.3',
       debugShowCheckedModeBanner: false,
       theme: _themePreset.toThemeData(),
       builder: (context, child) => Directionality(
@@ -148,7 +148,13 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
   int _tabIndex = 0;
   bool _expertMode = false;
 
-  // Core room numeric controllers
+  // Custom-panel visibility toggles per settings section
+  bool _roomCustomOpen = false;
+  bool _sizingCustomOpen = false;
+  bool _auditCustomOpen = false;
+  bool _reportCustomOpen = false;
+
+  // ALL calculation input fields start EMPTY on app entry
   final _lenCtrl = TextEditingController();
   final _widCtrl = TextEditingController();
   final _heiCtrl = TextEditingController();
@@ -159,37 +165,37 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
   final _kgCtrl = TextEditingController();
   final _tProdCtrl = TextEditingController();
   final _pipeCtrl = TextEditingController();
-  final _scCtrl = TextEditingController(text: '5');
-  final _shCtrl = TextEditingController(text: '7');
+  final _scCtrl = TextEditingController();
+  final _shCtrl = TextEditingController();
 
-  // Custom fields for EVERY section
+  // Custom fields for EVERY section (start empty)
   final _customCalcLineCtrl = TextEditingController();
   final _customRoomCtrl = TextEditingController();
-  final _customInsMmCtrl = TextEditingController(text: '150');
-  final _customLambdaCtrl = TextEditingController(text: '0.023');
-  final _customCpAboveCtrl = TextEditingController(text: '3.5');
-  final _customCpBelowCtrl = TextEditingController(text: '1.8');
-  final _customLatentCtrl = TextEditingController(text: '240');
-  final _customAirChgCtrl = TextEditingController(text: '8');
+  final _customInsMmCtrl = TextEditingController();
+  final _customLambdaCtrl = TextEditingController();
+  final _customCpAboveCtrl = TextEditingController();
+  final _customCpBelowCtrl = TextEditingController();
+  final _customLatentCtrl = TextEditingController();
+  final _customAirChgCtrl = TextEditingController();
   final _customArchCtrl = TextEditingController();
-  final _customDefrostKwCtrl = TextEditingController(text: '3.0');
-  final _customRefCtrl = TextEditingController(text: 'R452A');
+  final _customDefrostKwCtrl = TextEditingController();
+  final _customRefCtrl = TextEditingController();
   final _customCompModelCtrl = TextEditingController();
   final _customCompCapCtrl = TextEditingController();
   final _customCompElecCtrl = TextEditingController();
-  final _customVoltCtrl = TextEditingController(text: '400');
-  final _customCosPhiCtrl = TextEditingController(text: '0.84');
-  final _customPanelWCtrl = TextEditingController(text: '1.10');
-  final _customXrefDispCtrl = TextEditingController(text: '12.0');
+  final _customVoltCtrl = TextEditingController();
+  final _customCosPhiCtrl = TextEditingController();
+  final _customPanelWCtrl = TextEditingController();
+  final _customXrefDispCtrl = TextEditingController();
   final _customAudSealCtrl = TextEditingController();
   final _customAudCleanCtrl = TextEditingController();
   final _customReportLineCtrl = TextEditingController();
 
-  // Direct Scientific Sizing controllers (Tab 4 standalone custom calculator)
+  // Direct Scientific Sizing controllers (Tab 4 — start empty)
   final _dirQ0Ctrl = TextEditingController();
   final _dirT0Ctrl = TextEditingController();
   final _dirTkCtrl = TextEditingController();
-  final _dirPipeCtrl = TextEditingController(text: '10');
+  final _dirPipeCtrl = TextEditingController();
   final _dirCustomSpecCtrl = TextEditingController();
   ScientificComponentSizing? _directSizing;
   ElectricalSizing? _directElectrical;
@@ -215,7 +221,7 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
   CryoInput? _lastInput;
   CryoResult? _result;
 
-  // Field Audit controllers
+  // Field Audit controllers (start empty)
   final _audT0Ctrl = TextEditingController();
   final _audTsucCtrl = TextEditingController();
   final _audTkCtrl = TextEditingController();
@@ -231,7 +237,7 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
   // Report controllers
   final _clientCtrl = TextEditingController();
   final _projectCtrl = TextEditingController();
-  final _engCtrl = TextEditingController(text: CryoOwner.developerAr);
+  final _engCtrl = TextEditingController();
 
   String tr(String key) => AppStrings.t(widget.lang, key);
   String _l(String ar, String fr, String en) {
@@ -444,6 +450,69 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
     );
   }
 
+  /* ==================== AUTO FILL HELPERS PER TAB ==================== */
+  void _autoFillRoom() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _roomCustomOpen = false;
+      _lenCtrl.text = '6';
+      _widCtrl.text = '4';
+      _heiCtrl.text = '3';
+      _tInCtrl.text = _roomType == 'negative' ? '-20' : (_roomType == 'tunnel' ? '-35' : '2');
+      _tAmbCtrl.text = '38';
+      _kgCtrl.text = '1500';
+      _tProdCtrl.text = '20';
+      _insOption = _roomType == 'negative' ? '120' : (_roomType == 'tunnel' ? '160' : '80');
+      _doorTraffic = 'med';
+      _arch = 'split';
+    });
+    _runCalculation();
+    _showMsg(tr('auto_filled'));
+  }
+
+  void _autoFillDirectSizing() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _sizingCustomOpen = false;
+      _dirQ0Ctrl.text = _result != null ? _result!.q0Kw.toString() : '6.5';
+      _dirT0Ctrl.text = _result != null ? _result!.t0.toString() : '-10';
+      _dirTkCtrl.text = _result != null ? _result!.tk.toString() : '45';
+      _dirPipeCtrl.text = _lastInput != null ? _lastInput!.pipeLen.toStringAsFixed(0) : '10';
+    });
+    _runDirectSizing();
+    _showMsg(tr('auto_filled'));
+  }
+
+  void _autoFillAudit() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _auditCustomOpen = false;
+      _audT0Ctrl.text = _result != null ? _result!.t0.toString() : '-10';
+      _audTsucCtrl.text = _result != null ? (_result!.t0 + 7).toStringAsFixed(1) : '-3';
+      _audTkCtrl.text = _result != null ? _result!.tk.toString() : '45';
+      _audTliqCtrl.text = _result != null ? (_result!.tk - 5).toStringAsFixed(1) : '40';
+      _audTroomCtrl.text = _lastInput != null ? _lastInput!.tInside.toString() : '-2';
+      _audTdisCtrl.text = '82';
+      _audP0Ctrl.text = _result != null ? _result!.q0Kw.toString() : '8.5';
+      _audPelecCtrl.text = _result != null ? _result!.pElecKw.toString() : '3.2';
+      _audSeals = 'good';
+      _audClean = 'good';
+    });
+    _runAudit();
+    _showMsg(tr('auto_filled'));
+  }
+
+  void _autoFillReport() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _reportCustomOpen = false;
+      _projectCtrl.text = _l('دراسة غرفة تبريد', 'Etude chambre froide', 'Cold Room Study');
+      _engCtrl.text = tr('dev_name');
+    });
+    _showMsg(tr('auto_filled'));
+  }
+
+  /* ==================== CALCULATIONS ==================== */
   void _runCalculation() {
     final l = double.tryParse(_lenCtrl.text.trim());
     final w = double.tryParse(_widCtrl.text.trim());
@@ -509,10 +578,6 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
       _result = res;
       _directSizing = null;
       _directElectrical = null;
-      _dirQ0Ctrl.text = res.q0Kw.toString();
-      _dirT0Ctrl.text = res.t0.toString();
-      _dirTkCtrl.text = res.tk.toString();
-      _dirPipeCtrl.text = inp.pipeLen.toStringAsFixed(0);
     });
   }
 
@@ -523,9 +588,9 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
     if (q0 == null || t0 == null || tk == null || q0 <= 0) {
       if (!silent) {
         _showMsg(_l(
-          'أدخل الاستطاعة Q₀ (kW) وحرارة التبخير T₀ والتكثيف Tk أولاً.',
-          'Saisissez Q₀ (kW), T₀ et Tk d\'abord.',
-          'Enter Q₀ (kW), T₀, and Tk first.',
+          'أدخل الاستطاعة Q₀ (kW) وحرارة التبخير T₀ والتكثيف Tk أولاً (أو اضغط «تلقائي»).',
+          'Saisissez Q₀ (kW), T₀ et Tk (ou Automatique).',
+          'Enter Q₀ (kW), T₀, and Tk first (or tap Auto).',
         ));
       }
       return;
@@ -595,21 +660,21 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
     String txvBody = isLT ? 'Danfoss TES2 / Alco TI' : 'Danfoss TEX2 / TES2';
     String orifice = 'Orifice 01';
     if (txvNomKw < 1.2) {
-      orifice = 'Orifice 0X (0.6–1.2 kW)';
+      orifice = 'Orifice 0X (0.6-1.2 kW)';
     } else if (txvNomKw < 2.2) {
-      orifice = 'Orifice 00 (1.2–2.2 kW)';
+      orifice = 'Orifice 00 (1.2-2.2 kW)';
     } else if (txvNomKw < 3.6) {
-      orifice = 'Orifice 01 (2.2–3.6 kW)';
+      orifice = 'Orifice 01 (2.2-3.6 kW)';
     } else if (txvNomKw < 5.2) {
-      orifice = 'Orifice 02 (3.6–5.2 kW)';
+      orifice = 'Orifice 02 (3.6-5.2 kW)';
     } else if (txvNomKw < 7.6) {
-      orifice = 'Orifice 03 (5.2–7.6 kW)';
+      orifice = 'Orifice 03 (5.2-7.6 kW)';
     } else if (txvNomKw < 10.5) {
-      orifice = 'Orifice 04 (7.6–10.5 kW)';
+      orifice = 'Orifice 04 (7.6-10.5 kW)';
     } else if (txvNomKw < 14.2) {
-      orifice = 'Orifice 05 (10.5–14.2 kW)';
+      orifice = 'Orifice 05 (10.5-14.2 kW)';
     } else if (txvNomKw < 18.5) {
-      orifice = 'Orifice 06 (14.2–18.5 kW)';
+      orifice = 'Orifice 06 (14.2-18.5 kW)';
     } else {
       txvBody = 'Danfoss TE5 / Alco TCLE';
       orifice = txvNomKw < 26 ? 'TE5 Orifice 01' : (txvNomKw < 36 ? 'TE5 Orifice 02' : 'TE5 Orifice 03');
@@ -668,7 +733,7 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
         txvNominalCapKw: txvNomKw,
         txvBody: txvBody,
         txvOrificeNumber: orifice,
-        txvMopNote: isLT ? _l('MOP -15°C / -20°C لحماية الضاغط', 'MOP -15°C / -20°C', 'MOP -15°C / -20°C') : _l('بدون MOP (أو +15°C)', 'Sans MOP (+15°C)', 'No MOP (+15°C)'),
+        txvMopNote: isLT ? _l('MOP -15/-20 لحماية الضاغط', 'MOP -15/-20', 'MOP -15/-20') : _l('بدون MOP (أو +15)', 'Sans MOP (+15)', 'No MOP (+15)'),
         filterDrierModel: drierModel,
         filterConnInch: liq,
         sightGlassModel: 'Danfoss SGN / Castel 3940 ($liq)',
@@ -677,7 +742,7 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
         oilSeparatorModel: oilModel,
         oilPreChargeL: q0 < 5 ? 0.45 : (q0 < 15 ? 0.65 : 1.0),
         oilSeparatorMandatory: oilMandatory,
-        oilSeparatorStatus: oilMandatory ? _l('إلزامي ✓', 'Obligatoire ✓', 'Mandatory ✓') : _l('اختياري (مصيدة زيت)', 'Optionnel (piège)', 'Optional (oil trap)'),
+        oilSeparatorStatus: oilMandatory ? _l('إلزامي', 'Obligatoire', 'Mandatory') : _l('اختياري (مصيدة زيت)', 'Optionnel (piege)', 'Optional (oil trap)'),
         estTotalChargeKg: totalChargeKg,
         liquidDensityKgL: refProps.liquidDensityKgL,
         receiverMinVolL: recMinL,
@@ -685,18 +750,18 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
         receiverModel: 'Carly / Castel ${recStdL}L (PS 33 bar)',
         aclMinVolL: aclMinL,
         aclStdVolL: aclStdL,
-        aclModel: 'Carly LCY / Castel 5520 (${aclStdL}L • $suc)',
+        aclModel: 'Carly LCY / Castel 5520 (${aclStdL}L | $suc)',
         aclConnInch: suc,
         aclBleedHoleMm: q0 < 6 ? '1.5 mm' : (q0 < 15 ? '2.0 mm' : '2.5 mm'),
-        solenoidValve: 'Danfoss EVR ${q0 < 6 ? "3" : q0 < 14 ? "6" : "10"} ($liq • 230V)',
+        solenoidValve: 'Danfoss EVR ${q0 < 6 ? "3" : q0 < 14 ? "6" : "10"} ($liq | 230V)',
         hpLpSwitch: 'Danfoss KP15 (HP: ${(pkAbs + 4.5).clamp(16.0, 30.0).toStringAsFixed(1)} bar / LP: ${math.max(0.3, p0Rel - 0.6).toStringAsFixed(1)} bar)',
       );
       _directElectrical = ElectricalSizing(
         nominalAmps: iNom,
         breakerRating: '3P+N ${brk}A (Courbe D)',
         contactorRating: 'LC1D$cnt (${cnt}A AC-3)',
-        overloadRange: '${(iNom * 0.85).toStringAsFixed(1)} – ${(iNom * 1.25).toStringAsFixed(1)} A',
-        cableSection: '5G $cab mm² (Cu RO2V)',
+        overloadRange: '${(iNom * 0.85).toStringAsFixed(1)} - ${(iNom * 1.25).toStringAsFixed(1)} A',
+        cableSection: '5G $cab mm2 (Cu RO2V)',
         defrostHeaterKw: defrostKw,
       );
     });
@@ -707,18 +772,21 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
     setState(() {
       for (final c in [
         _lenCtrl, _widCtrl, _heiCtrl, _tInCtrl, _tAmbCtrl, _tFloorCtrl,
-        _opHoursCtrl, _kgCtrl, _tProdCtrl, _pipeCtrl, _customCalcLineCtrl,
-        _customRoomCtrl, _customArchCtrl, _customCompModelCtrl,
-        _customCompCapCtrl, _customCompElecCtrl, _dirQ0Ctrl, _dirT0Ctrl,
-        _dirTkCtrl, _dirCustomSpecCtrl, _audT0Ctrl, _audTsucCtrl, _audTkCtrl,
-        _audTliqCtrl, _audTroomCtrl, _audTdisCtrl, _audP0Ctrl, _audPelecCtrl,
-        _customAudSealCtrl, _customAudCleanCtrl,
+        _opHoursCtrl, _kgCtrl, _tProdCtrl, _pipeCtrl, _scCtrl, _shCtrl,
+        _customCalcLineCtrl, _customRoomCtrl, _customInsMmCtrl, _customLambdaCtrl,
+        _customCpAboveCtrl, _customCpBelowCtrl, _customLatentCtrl, _customAirChgCtrl,
+        _customArchCtrl, _customDefrostKwCtrl, _customRefCtrl, _customCompModelCtrl,
+        _customCompCapCtrl, _customCompElecCtrl, _customVoltCtrl, _customCosPhiCtrl,
+        _customPanelWCtrl, _customXrefDispCtrl, _dirQ0Ctrl, _dirT0Ctrl,
+        _dirTkCtrl, _dirPipeCtrl, _dirCustomSpecCtrl, _audT0Ctrl, _audTsucCtrl,
+        _audTkCtrl, _audTliqCtrl, _audTroomCtrl, _audTdisCtrl, _audP0Ctrl,
+        _audPelecCtrl, _customAudSealCtrl, _customAudCleanCtrl,
       ]) {
         c.clear();
       }
-      _scCtrl.text = '5';
-      _shCtrl.text = '7';
-      _dirPipeCtrl.text = '10';
+      _roomCustomOpen = false;
+      _sizingCustomOpen = false;
+      _auditCustomOpen = false;
       _roomType = 'positive';
       _insOption = '80';
       _productId = 'veg';
@@ -747,8 +815,9 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
     setState(() {
       _clientCtrl.clear();
       _projectCtrl.clear();
+      _engCtrl.clear();
       _customReportLineCtrl.clear();
-      _engCtrl.text = tr('dev_name');
+      _reportCustomOpen = false;
     });
     _showMsg(tr('reset'));
   }
@@ -762,10 +831,13 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
       _selectedCompId = null;
       _xrefSourceId = 'cp2';
       _xrefCustomRegime = 'MT';
-      _customXrefDispCtrl.text = '12.0';
+      _customXrefDispCtrl.clear();
+      _customRefCtrl.clear();
       _customCompModelCtrl.clear();
       _customCompCapCtrl.clear();
       _customCompElecCtrl.clear();
+      _customVoltCtrl.clear();
+      _customCosPhiCtrl.clear();
     });
     if (_result != null) _runCalculation();
     _showMsg(tr('reset'));
@@ -808,7 +880,7 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
       _projectCtrl.text.trim(),
       if (_customCalcLineCtrl.text.trim().isNotEmpty) _customCalcLineCtrl.text.trim(),
       if (_customReportLineCtrl.text.trim().isNotEmpty) _customReportLineCtrl.text.trim(),
-    ].where((s) => s.isNotEmpty).join(' • ');
+    ].where((s) => s.isNotEmpty).join(' | ');
     try {
       await PdfPrinterService.printEngineeringReport(
         lang: widget.lang,
@@ -816,7 +888,7 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
         result: _result!,
         client: _clientCtrl.text.trim(),
         project: projFull,
-        engineer: _engCtrl.text.trim(),
+        engineer: _engCtrl.text.trim().isEmpty ? tr('dev_name') : _engCtrl.text.trim(),
       );
     } catch (e) {
       _showMsg('PDF: $e');
@@ -847,7 +919,7 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
         auditResult: _auditResult!,
         client: _clientCtrl.text.trim(),
         project: _projectCtrl.text.trim(),
-        engineer: _engCtrl.text.trim(),
+        engineer: _engCtrl.text.trim().isEmpty ? tr('dev_name') : _engCtrl.text.trim(),
       );
     } catch (e) {
       _showMsg('PDF: $e');
@@ -864,9 +936,9 @@ class _CryoHomeScreenState extends State<CryoHomeScreen> {
     ].join(' | ');
     final txt = '''
 === CryoCalc PRO ${CryoOwner.appVersion} ===
-${tr("engineer")}: ${_engCtrl.text} | ${CryoOwner.groupCode}
+${tr("engineer")}: ${_engCtrl.text.trim().isEmpty ? tr("dev_name") : _engCtrl.text} | ${CryoOwner.groupCode}
 ${tr("client")}: ${_clientCtrl.text} | ${tr("project")}: ${_projectCtrl.text}
-${customNotes.isNotEmpty ? "Custom: $customNotes\n" : ""}${tr("kpi_q0")}: ${r.q0Kw} kW (${r.kcalH} kcal/h) | ${tr("kpi_vol")}: ${r.volume} m3
+${customNotes.isNotEmpty ? "${tr("custom")}: $customNotes\n" : ""}${tr("kpi_q0")}: ${r.q0Kw} kW (${r.kcalH} kcal/h) | ${tr("kpi_vol")}: ${r.volume} m3
 ${tr("s_comp")}: ${r.recommendedUnit} | Vb=${s.reqSweptVolM3h} m3/h
 ${tr("s_txvbody")}: ${s.txvBody} -> ${s.txvOrificeNumber}
 ${tr("s_drier")}: ${s.filterDrierModel} | ${s.sightGlassModel}
@@ -999,8 +1071,15 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cardHeader(tr('room_params'), _resetAll),
-              const SizedBox(height: 6),
+              Text(tr('room_params'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain)),
+              const SizedBox(height: 8),
+              _settingsActionBar(
+                onAuto: _autoFillRoom,
+                onCustom: () => setState(() => _roomCustomOpen = !_roomCustomOpen),
+                onReset: _resetAll,
+                customActive: _roomCustomOpen,
+              ),
+              const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: _roomType,
                 isExpanded: true,
@@ -1135,7 +1214,7 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
                   ],
                 ),
               ],
-              if (_expertMode) ...[
+              if (_expertMode || _roomCustomOpen) ...[
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -1172,15 +1251,15 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
                   const SizedBox(height: 8),
                   _numInput(_customDefrostKwCtrl, tr('custom_def_kw'), '3.5'),
                 ],
-              ],
-              const SizedBox(height: 10),
-              TextField(
-                controller: _customCalcLineCtrl,
-                decoration: InputDecoration(
-                  labelText: _l('تحديد مخصص / ملاحظة إعدادات الحساب', 'Spécification personnalisée / Note', 'Custom Calculation Specification'),
-                  hintText: _l('مثال: غرفة في منطقة صحراوية أو شروط خاصة', 'Ex: Zone chaude / Conditions spéciales', 'Ex: High ambient / Special duty'),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _customCalcLineCtrl,
+                  decoration: InputDecoration(
+                    labelText: _l('تحديد مخصص / ملاحظة إعدادات الحساب', 'Spécification personnalisée / Note', 'Custom Calculation Specification'),
+                    hintText: _l('مثال: غرفة في منطقة صحراوية أو شروط خاصة', 'Ex: Zone chaude / Conditions spéciales', 'Ex: High ambient / Special duty'),
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
@@ -1243,17 +1322,32 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
       children: [
         _card(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cardHeader(_l('إعدادات ألواح الساندويتش', 'Paramètres Panneaux Sandwich', 'Sandwich Panel Settings'), () {
-                setState(() {
-                  _panelWidthOpt = '1.15';
-                  _floorPanelMode = 'auto';
-                  _customPanelWCtrl.text = '1.10';
-                });
-                _runCalculation();
-                _showMsg(tr('reset'));
-              }),
-              const SizedBox(height: 6),
+              Text(_l('إعدادات ألواح الساندويتش', 'Paramètres Panneaux Sandwich', 'Sandwich Panel Settings'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain)),
+              const SizedBox(height: 8),
+              _settingsActionBar(
+                onAuto: () {
+                  setState(() {
+                    _panelWidthOpt = '1.15';
+                    _floorPanelMode = 'auto';
+                  });
+                  _runCalculation();
+                  _showMsg(tr('auto_filled'));
+                },
+                onCustom: () => setState(() => _panelWidthOpt = _panelWidthOpt == 'custom' ? '1.15' : 'custom'),
+                onReset: () {
+                  setState(() {
+                    _panelWidthOpt = '1.15';
+                    _floorPanelMode = 'auto';
+                    _customPanelWCtrl.clear();
+                  });
+                  _runCalculation();
+                  _showMsg(tr('reset'));
+                },
+                customActive: _panelWidthOpt == 'custom',
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -1319,15 +1413,20 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
     );
   }
 
-  /* ==================== TAB 3: UNITS, INDUSTRIAL CALC & CUSTOM CROSS-REFERENCE ==================== */
+  /* ==================== TAB 3: UNITS, INDUSTRIAL CALC & CROSS-REFERENCE ==================== */
   Widget _buildUnitsTab() {
     List<CompressorItem> xrefList;
     if (_xrefSourceId == 'custom') {
-      final targetDisp = (double.tryParse(_customXrefDispCtrl.text.trim()) ?? 12.0).clamp(1.0, 200.0);
-      xrefList = CryoEngine.compressors
-          .where((c) => c.regime == _xrefCustomRegime && (c.dispM3h - targetDisp).abs() / targetDisp <= 0.28)
-          .toList()
-        ..sort((a, b) => (a.dispM3h - targetDisp).abs().compareTo((b.dispM3h - targetDisp).abs()));
+      final parsed = double.tryParse(_customXrefDispCtrl.text.trim());
+      if (parsed == null || parsed <= 0) {
+        xrefList = [];
+      } else {
+        final targetDisp = parsed.clamp(1.0, 200.0);
+        xrefList = CryoEngine.compressors
+            .where((c) => c.regime == _xrefCustomRegime && (c.dispM3h - targetDisp).abs() / targetDisp <= 0.28)
+            .toList()
+          ..sort((a, b) => (a.dispM3h - targetDisp).abs().compareTo((b.dispM3h - targetDisp).abs()));
+      }
     } else {
       xrefList = CryoEngine.findCrossReference(_xrefSourceId);
     }
@@ -1335,7 +1434,6 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
-        // Quick Launch Button for Industrial Compressor & 16 Group Parts Calculator
         SizedBox(
           width: double.infinity,
           height: 50,
@@ -1374,9 +1472,26 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
         const SizedBox(height: 12),
         _card(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cardHeader(_l('إعدادات اختيار المجموعة والغاز', 'Paramètres Groupe & Fluide', 'Unit & Refrigerant Settings'), _resetUnitsSettings),
-              const SizedBox(height: 6),
+              Text(_l('إعدادات اختيار المجموعة والغاز', 'Paramètres Groupe & Fluide', 'Unit & Refrigerant Settings'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain)),
+              const SizedBox(height: 8),
+              _settingsActionBar(
+                onAuto: () {
+                  setState(() {
+                    _refrigerant = 'R404A';
+                    _brandFilter = 'ALL';
+                    _voltageFilter = '400';
+                    _selectedCompId = null;
+                  });
+                  if (_result != null) _runCalculation();
+                  _showMsg(tr('auto_filled'));
+                },
+                onCustom: () => setState(() => _brandFilter = _brandFilter == 'custom' ? 'ALL' : 'custom'),
+                onReset: _resetUnitsSettings,
+                customActive: _brandFilter == 'custom',
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -1415,7 +1530,7 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
               ),
               if (_refrigerant == 'custom') ...[
                 const SizedBox(height: 8),
-                TextField(controller: _customRefCtrl, decoration: InputDecoration(labelText: tr('custom_ref'))),
+                TextField(controller: _customRefCtrl, decoration: InputDecoration(labelText: tr('custom_ref'), hintText: 'R452A')),
               ],
               if (_brandFilter == 'custom') ...[
                 const SizedBox(height: 8),
@@ -1511,15 +1626,28 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cardHeader(tr('xref_title'), () {
-                setState(() {
-                  _xrefSourceId = 'cp2';
-                  _xrefCustomRegime = 'MT';
-                  _customXrefDispCtrl.text = '12.0';
-                });
-                _showMsg(tr('reset'));
-              }),
+              Text(tr('xref_title'), style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: _textMain)),
               const SizedBox(height: 8),
+              _settingsActionBar(
+                onAuto: () {
+                  setState(() {
+                    _xrefSourceId = _result != null ? _result!.selectedUnit.item.id : 'cp2';
+                    if (!CryoEngine.compressors.any((c) => c.id == _xrefSourceId)) _xrefSourceId = 'cp2';
+                  });
+                  _showMsg(tr('auto_filled'));
+                },
+                onCustom: () => setState(() => _xrefSourceId = _xrefSourceId == 'custom' ? 'cp2' : 'custom'),
+                onReset: () {
+                  setState(() {
+                    _xrefSourceId = 'cp2';
+                    _xrefCustomRegime = 'MT';
+                    _customXrefDispCtrl.clear();
+                  });
+                  _showMsg(tr('reset'));
+                },
+                customActive: _xrefSourceId == 'custom',
+              ),
+              const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: _xrefSourceId,
                 isExpanded: true,
@@ -1540,7 +1668,7 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
                         controller: _customXrefDispCtrl,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(labelText: _l('الحجم الممسوح المخصص (m³/h)', 'Volume balayé (m³/h)', 'Custom Swept Vol (m³/h)')),
+                        decoration: InputDecoration(labelText: _l('الحجم الممسوح المخصص (m³/h)', 'Volume balayé (m³/h)', 'Custom Swept Vol (m³/h)'), hintText: '12.0'),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1562,7 +1690,7 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
               if (xrefList.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(_l('لا يوجد ضاغط قريب من هذه القيمة، جرّب تعديل m³/h.', 'Aucun compresseur proche trouvé.', 'No matching compressor found.'), style: TextStyle(color: _textMuted, fontSize: 12)),
+                  child: Text(_l('أدخل الحجم الممسوح (m³/h) لإظهار الضواغط المعادلة.', 'Saisissez le volume balayé (m³/h).', 'Enter swept volume (m³/h) to see matches.'), style: TextStyle(color: _textMuted, fontSize: 12)),
                 )
               else
                 ...xrefList.take(6).map((alt) => _infoTile('${alt.brand} ${alt.model}', '${alt.dispM3h} m³/h • ${alt.tech}')),
@@ -1573,7 +1701,7 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
     );
   }
 
-  /* ==================== TAB 4: SCIENTIFIC SIZING (NEVER EMPTY + DIRECT CUSTOM CALC) ==================== */
+  /* ==================== TAB 4: SCIENTIFIC SIZING ==================== */
   Widget _buildScientificSizingTab() {
     final s = _directSizing ?? _result?.sizing;
     final el = _directElectrical ?? _result?.electrical;
@@ -1587,22 +1715,27 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cardHeader(
-                _l('حساب مخصص مباشر للمكونات الـ 9', 'Calcul Direct Personnalisé (9 Composants)', 'Direct Custom Component Sizing'),
-                () {
+              Text(_l('حساب مخصص مباشر للمكونات الـ 9', 'Calcul Direct (9 Composants)', 'Direct Component Sizing'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain)),
+              const SizedBox(height: 8),
+              _settingsActionBar(
+                onAuto: _autoFillDirectSizing,
+                onCustom: () => setState(() => _sizingCustomOpen = !_sizingCustomOpen),
+                onReset: () {
                   setState(() {
                     _dirQ0Ctrl.clear();
                     _dirT0Ctrl.clear();
                     _dirTkCtrl.clear();
-                    _dirPipeCtrl.text = '10';
+                    _dirPipeCtrl.clear();
                     _dirCustomSpecCtrl.clear();
+                    _sizingCustomOpen = false;
                     _directSizing = null;
                     _directElectrical = null;
                   });
                   _showMsg(tr('reset'));
                 },
+                customActive: _sizingCustomOpen,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(child: _numInput(_dirQ0Ctrl, 'Q₀ (kW)', '6.5')),
@@ -1630,14 +1763,24 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
                   Expanded(child: _numInput(_dirPipeCtrl, tr('pipes_m'), '10')),
                 ],
               ),
-              const SizedBox(height: 9),
-              TextField(
-                controller: _dirCustomSpecCtrl,
-                decoration: InputDecoration(
-                  labelText: _l('تحديد مخصص لمكونات الدائرة', 'Spécification personnalisée circuit', 'Custom Circuit Specification'),
-                  hintText: _l('مثال: خط سحب صاعد 6م أو ضاغط مزدوج', 'Ex: Colonne montante 6m / Bi-étagé', 'Ex: 6m riser / Two-stage'),
+              if (_sizingCustomOpen) ...[
+                const SizedBox(height: 9),
+                Row(
+                  children: [
+                    Expanded(child: _numInput(_shCtrl, tr('sh_lbl'), '7')),
+                    const SizedBox(width: 8),
+                    Expanded(child: _numInput(_scCtrl, tr('sc_lbl'), '5')),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 9),
+                TextField(
+                  controller: _dirCustomSpecCtrl,
+                  decoration: InputDecoration(
+                    labelText: _l('تحديد مخصص لمكونات الدائرة', 'Spécification personnalisée circuit', 'Custom Circuit Specification'),
+                    hintText: _l('مثال: خط سحب صاعد 6م أو ضاغط مزدوج', 'Ex: Colonne montante 6m / Bi-étagé', 'Ex: 6m riser / Two-stage'),
+                  ),
+                ),
+              ],
               const SizedBox(height: 11),
               Row(
                 children: [
@@ -1673,9 +1816,9 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
           _emptyBox(
             Icons.science_rounded,
             _l(
-              'أدخل القيم في البطاقة أعلاه واضغط «احسب المكونات الـ 9»، أو احسب الغرفة من تبويب 3D لعرض كامل الحسابات العلمية هنا.',
-              'Saisissez Q₀, T₀, Tk ci-dessus ou lancez le calcul dans l\'onglet 3D pour afficher les 9 composants.',
-              'Enter Q₀, T₀, Tk above or run the 3D room calculation to display all 9 scientific components.',
+              'أدخل القيم في البطاقة أعلاه واضغط «احسب المكونات الـ 9» أو اضغط «تلقائي» لعرض كامل الحسابات العلمية هنا.',
+              'Saisissez Q₀, T₀, Tk ci-dessus ou cliquez sur « Automatique » pour afficher les 9 composants.',
+              'Enter Q₀, T₀, Tk above or tap "Auto" to display all 9 scientific components.',
             ),
           )
         else ...[
@@ -1753,8 +1896,21 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cardHeader(tr('audit_title'), _resetAll),
+              Text(tr('audit_title'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: _textMain)),
               const SizedBox(height: 8),
+              _settingsActionBar(
+                onAuto: _autoFillAudit,
+                onCustom: () => setState(() {
+                  _auditCustomOpen = !_auditCustomOpen;
+                  if (_auditCustomOpen) {
+                    _audSeals = 'custom';
+                    _audClean = 'custom';
+                  }
+                }),
+                onReset: _resetAll,
+                customActive: _auditCustomOpen,
+              ),
+              const SizedBox(height: 10),
               Row(children: [
                 Expanded(child: _numInput(_audT0Ctrl, 'T₀ (°C)', '-10')),
                 const SizedBox(width: 8),
@@ -1810,13 +1966,13 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
                   ),
                 ),
               ]),
-              if (_audSeals == 'custom') ...[
+              if (_audSeals == 'custom' || _auditCustomOpen) ...[
                 const SizedBox(height: 8),
-                TextField(controller: _customAudSealCtrl, decoration: InputDecoration(labelText: tr('custom_note'))),
+                TextField(controller: _customAudSealCtrl, decoration: InputDecoration(labelText: '${tr("seals_lbl")} (${tr("custom")})')),
               ],
-              if (_audClean == 'custom') ...[
+              if (_audClean == 'custom' || _auditCustomOpen) ...[
                 const SizedBox(height: 8),
-                TextField(controller: _customAudCleanCtrl, decoration: InputDecoration(labelText: tr('custom_note'))),
+                TextField(controller: _customAudCleanCtrl, decoration: InputDecoration(labelText: '${tr("clean_lbl")} (${tr("custom")})')),
               ],
               const SizedBox(height: 12),
               Row(
@@ -1879,7 +2035,7 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
     );
   }
 
-  /* ==================== TAB 6: REPORT + CUSTOM LINE + RESET ==================== */
+  /* ==================== TAB 6: REPORT ==================== */
   Widget _buildReportTab() {
     return ListView(
       padding: const EdgeInsets.all(14),
@@ -1888,21 +2044,30 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cardHeader(tr('report_title'), _resetReportFields),
+              Text(tr('report_title'), style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900, color: _textMain)),
+              const SizedBox(height: 8),
+              _settingsActionBar(
+                onAuto: _autoFillReport,
+                onCustom: () => setState(() => _reportCustomOpen = !_reportCustomOpen),
+                onReset: _resetReportFields,
+                customActive: _reportCustomOpen,
+              ),
               const SizedBox(height: 10),
               TextField(controller: _clientCtrl, decoration: InputDecoration(labelText: tr('client'))),
               const SizedBox(height: 9),
               TextField(controller: _projectCtrl, decoration: InputDecoration(labelText: tr('project'))),
               const SizedBox(height: 9),
-              TextField(controller: _engCtrl, decoration: InputDecoration(labelText: tr('engineer'))),
-              const SizedBox(height: 9),
-              TextField(
-                controller: _customReportLineCtrl,
-                decoration: InputDecoration(
-                  labelText: _l('تحديد مخصص / ملاحظات التقرير', 'Ligne personnalisée / Remarques', 'Custom Report Line / Notes'),
-                  hintText: _l('مثال: ضمان 12 شهراً أو ملاحظات التركيب', 'Ex: Garantie 12 mois / Notes', 'Ex: 12-month warranty / Notes'),
+              TextField(controller: _engCtrl, decoration: InputDecoration(labelText: tr('engineer'), hintText: tr('dev_name'))),
+              if (_reportCustomOpen) ...[
+                const SizedBox(height: 9),
+                TextField(
+                  controller: _customReportLineCtrl,
+                  decoration: InputDecoration(
+                    labelText: _l('تحديد مخصص / ملاحظات التقرير', 'Ligne personnalisée / Remarques', 'Custom Report Line / Notes'),
+                    hintText: _l('مثال: ضمان 12 شهراً أو ملاحظات التركيب', 'Ex: Garantie 12 mois / Notes', 'Ex: 12-month warranty / Notes'),
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1944,17 +2109,47 @@ ${tr("s_elec")}: ${r.electrical.breakerRating} | ${r.electrical.cableSection}
   }
 
   /* ==================== REUSABLE UI HELPERS ==================== */
-  Widget _cardHeader(String title, VoidCallback onReset) {
+  Widget _settingsActionBar({
+    required VoidCallback onAuto,
+    required VoidCallback onCustom,
+    required VoidCallback onReset,
+    bool customActive = false,
+  }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(child: Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _textMain))),
-        TextButton.icon(
-          onPressed: onReset,
-          icon: Icon(Icons.restart_alt_rounded, size: 17, color: th.accent),
-          label: Text(tr('reset'), style: TextStyle(color: th.accent, fontWeight: FontWeight.w800, fontSize: 12)),
-        ),
+        _ctrlChip(Icons.auto_awesome_rounded, tr('mode_auto'), th.secondary, onAuto),
+        const SizedBox(width: 6),
+        _ctrlChip(Icons.tune_rounded, tr('mode_custom'), customActive ? th.primary : _textMuted, onCustom, active: customActive),
+        const SizedBox(width: 6),
+        _ctrlChip(Icons.restart_alt_rounded, tr('reset'), th.accent, onReset),
       ],
+    );
+  }
+
+  Widget _ctrlChip(IconData icon, String label, Color col, VoidCallback onTap, {bool active = false}) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+          decoration: BoxDecoration(
+            color: active ? col.withAlpha(35) : th.inputBg,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: col.withAlpha(active ? 220 : 120)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: col),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(label, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.8, fontWeight: FontWeight.w800, color: col)),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
