@@ -224,7 +224,7 @@ class IndustrialCompressorEngine {
 
   // Full industrial range: 3 HP up to 150 HP across 7 major industrial brands
   static const List<IndustrialCompressor> catalog = [
-    // === BITZER SEMI-HERMETIC ECOLINE (3 HP -> 50 HP) ===
+    // === BITZER SEMI-HERMETIC ECOLINE (3 HP -> 70 HP) ===
     IndustrialCompressor(id: 'bz_3', brand: 'Bitzer', model: '2CES-3Y', tech: 'Semi-Hermetic', regime: 'MT', hp: 3, dispM3h: 16.2, qMtKw: 9.4, qLtKw: 3.9, pElecKw: 3.8, oilChargeL: 1.5, sucInch: '7/8"', disInch: '5/8"', starterType: 'DOL'),
     IndustrialCompressor(id: 'bz_4', brand: 'Bitzer', model: '4FES-5Y', tech: 'Semi-Hermetic', regime: 'MT', hp: 5, dispM3h: 18.1, qMtKw: 11.2, qLtKw: 4.9, pElecKw: 4.5, oilChargeL: 2.0, sucInch: '1-1/8"', disInch: '7/8"', starterType: 'DOL'),
     IndustrialCompressor(id: 'bz_6', brand: 'Bitzer', model: '4EES-6Y', tech: 'Semi-Hermetic', regime: 'MT', hp: 6, dispM3h: 22.7, qMtKw: 13.8, qLtKw: 6.2, pElecKw: 5.5, oilChargeL: 2.0, sucInch: '1-1/8"', disInch: '7/8"', starterType: 'Part-Winding'),
@@ -244,7 +244,7 @@ class IndustrialCompressorEngine {
     IndustrialCompressor(id: 'bz_2s3', brand: 'Bitzer', model: 'S6G-25.2Y (2-Stage)', tech: '2-Stage', regime: 'ULT', hp: 25, dispM3h: 84.5, qMtKw: 46.0, qLtKw: 32.5, pElecKw: 21.0, oilChargeL: 4.5, sucInch: '2-1/8"', disInch: '1-3/8"', starterType: 'Part-Winding'),
     IndustrialCompressor(id: 'bz_2s4', brand: 'Bitzer', model: 'S6F-30.2Y (2-Stage)', tech: '2-Stage', regime: 'ULT', hp: 30, dispM3h: 101.1, qMtKw: 56.0, qLtKw: 39.8, pElecKw: 25.8, oilChargeL: 4.75, sucInch: '2-1/8"', disInch: '1-3/8"', starterType: 'Part-Winding'),
 
-    // === BITZER INDUSTRIAL SCREW (HSN / CSH — 25 HP -> 150 HP) ===
+    // === BITZER INDUSTRIAL SCREW (HSN / CSH — 30 HP -> 150 HP) ===
     IndustrialCompressor(id: 'bz_sc1', brand: 'Bitzer', model: 'HSN5363-30 (Screw LT)', tech: 'Screw', regime: 'LT', hp: 30, dispM3h: 118.0, qMtKw: 68.0, qLtKw: 33.5, pElecKw: 24.5, oilChargeL: 9.0, sucInch: '2-1/8"', disInch: '1-5/8"', starterType: 'Star-Delta'),
     IndustrialCompressor(id: 'bz_sc2', brand: 'Bitzer', model: 'HSN6461-40 (Screw LT)', tech: 'Screw', regime: 'LT', hp: 40, dispM3h: 165.0, qMtKw: 96.0, qLtKw: 48.0, pElecKw: 34.0, oilChargeL: 11.0, sucInch: '2-5/8"', disInch: '2-1/8"', starterType: 'Star-Delta'),
     IndustrialCompressor(id: 'bz_sc3', brand: 'Bitzer', model: 'CSH7573-90Y (Screw MT)', tech: 'Screw', regime: 'MT', hp: 90, dispM3h: 258.0, qMtKw: 158.0, qLtKw: 74.0, pElecKw: 61.0, oilChargeL: 15.0, sucInch: '3-1/8"', disInch: '2-1/8"', starterType: 'Star-Delta'),
@@ -502,7 +502,7 @@ class IndustrialCompressorEngine {
       IndustrialPartItem(
         index: 8,
         title: _p(lang, 'خزان سائل التبريد + صمام الأمان', 'Réservoir Liquide + Soupape', 'Liquid Receiver + Relief Valve'),
-        spec: 'Réservoir $recStdL L (PS 33 bar) + Soupape ${ (pkAbs + 6.5).clamp(24.0, 32.0).toStringAsFixed(0) } bar',
+        spec: 'Réservoir $recStdL L (PS 33 bar) + Soupape ${(pkAbs + 6.5).clamp(24.0, 32.0).toStringAsFixed(0)} bar',
         details: 'Charge ≈ $totalChargeKg kg (EN 378 80% max fill) + ${_p(lang, "صمامي عزل Rotalock", "Vannes Rotalock", "Rotalock service valves")}',
       ),
       IndustrialPartItem(
@@ -531,9 +531,9 @@ class IndustrialCompressorEngine {
       ),
       IndustrialPartItem(
         index: 13,
-        title: _p(lang, 'الزجاجة المضادة للطلق (الأكيومليتور ACL)', 'Bouteille Anti-Coup de Liquide (ACL)', 'Suction Accumulator (ACL)'),
+        title: _p(lang, 'الأكيومليتور (Bouteille ACL)', 'Bouteille Anti-Coup de Liquide (ACL)', 'Suction Accumulator (ACL)'),
         spec: 'Carly LCY / Castel 5520 ($aclStdL L • Ø $suc)',
-        details: _p(lang, 'تستوعب ≥55% من الشحنة مع أنبوب U وثقب رجوع زيت محمي بمصفاة', 'Capacité ≥55% charge + orifice retour huile', 'Holds ≥55% charge with U-tube oil return bleed'),
+        details: _p(lang, 'يستوعب ≥55% من الشحنة مع أنبوب U وثقب رجوع زيت محمي بمصفاة', 'Capacité ≥55% charge + orifice retour huile', 'Holds ≥55% charge with U-tube oil return bleed'),
       ),
       IndustrialPartItem(
         index: 14,
