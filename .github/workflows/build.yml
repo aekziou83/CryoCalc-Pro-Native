@@ -1,0 +1,128 @@
+name: Build Clean Native APK & IPA
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Generate Android Wrapper if Missing
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create --platforms=android --org com.zinnour.cryocalc --project-name cryocalc_pro .
+          fi
+
+      - name: Normalize App Icon to PNG
+        run: |
+          mkdir -p assets
+          SRC=$(ls assets/icon.* 2>/dev/null | head -n 1 || true)
+          if [ -n "$SRC" ]; then
+            python3 -c "import PIL" 2>/dev/null || python3 -m pip install --break-system-packages -q pillow
+            python3 -c "from PIL import Image; Image.open('$SRC').convert('RGBA').resize((1024,1024)).save('assets/icon_tmp.png','PNG')"
+            mv assets/icon_tmp.png assets/icon.png
+          fi
+
+      - run: flutter pub get
+
+      - name: Generate Launcher Icons
+        run: |
+          if [ -f "assets/icon.png" ]; then
+            dart run flutter_launcher_icons
+          fi
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CryoCalcPro-Android-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          compression-level: 0
+
+  build-ios-free:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Generate iOS Wrapper if Missing
+        run: |
+          if [ ! -d "ios" ]; then
+            flutter create --platforms=ios --org com.zinnour.cryocalc --project-name cryocalc_pro .
+          fi
+
+      - name: Normalize App Icon to PNG (macOS)
+        run: |
+          mkdir -p assets
+          SRC=$(ls assets/icon.* 2>/dev/null | head -n 1 || true)
+          if [ -n "$SRC" ]; then
+            sips -s format png -z 1024 1024 "$SRC" --out assets/icon_tmp.png
+            mv assets/icon_tmp.png assets/icon.png
+          fi
+
+      - run: flutter pub get
+
+      - name: Generate Launcher Icons
+        run: |
+          if [ -f "assets/icon.png" ]; then
+            dart run flutter_launcher_icons
+          fi
+
+      - name: Build Release iOS App
+        run: flutter build ios --release --no-codesign
+
+      - name: Package Unsigned IPA (Preserve Symlinks)
+        run: |
+          rm -rf Payload CryoCalcPro-iOS.ipa
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -ry CryoCalcPro-iOS.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CryoCalcPro-iOS-IPA
+          path: CryoCalcPro-iOS.ipa
+          compression-level: 0
+
+  publish-release:
+    needs: [build-android, build-ios-free]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare Direct Install Files
+        run: |
+          mv artifacts/CryoCalcPro-Android-APK/app-release.apk CryoCalcPro.apk
+          mv artifacts/CryoCalcPro-iOS-IPA/CryoCalcPro-iOS.ipa CryoCalcPro-iOS.ipa
+
+      - name: Publish Direct APK & IPA to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v4.7-latest
+          name: CryoCalc Pro v4.7 (Direct APK & IPA)
+          make_latest: true
+          files: |
+            CryoCalcPro.apk
+            CryoCalcPro-iOS.ipa
